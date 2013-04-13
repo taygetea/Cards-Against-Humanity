@@ -5,6 +5,7 @@ import tk.nekotech.cah.CardsAgainstHumanity;
 import tk.nekotech.cah.bots.CardBot;
 
 public class CardConnect extends TimerTask {
+
     private final CardsAgainstHumanity cah;
 
     public CardConnect(final CardsAgainstHumanity cah) {
@@ -14,7 +15,7 @@ public class CardConnect extends TimerTask {
     @Override
     public void run() {
         try {
-            this.cah.cardBot = new CardBot("CAH-Cards", this.cah);
+            this.cah.cardBot = new CardBot(cah.NAME_CARDS, this.cah);
         } catch (final Exception e) {
             System.err.println("\n\n****************");
             System.err.println("Exception during startup of Cards bot!\n");

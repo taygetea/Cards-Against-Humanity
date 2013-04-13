@@ -23,11 +23,45 @@ import tk.nekotech.cah.tasks.Nag;
 import tk.nekotech.cah.tasks.StartGame;
 
 public class CardsAgainstHumanity {
+    
+    public static String CHANNEL;
+    public static String NAME_MASTER;
+    public static String NAME_CARDS;
+    public static String IRC_IP;
+    
     public static void main(final String[] args) {
+        if (args.length >= 1 && !args[0].equals("--help")) {
+            IRC_IP = args[0];
+            if (args.length >= 2) {
+                CHANNEL = "#" + args[1];
+                if (args.length >= 3) {
+                    NAME_MASTER = args[2];
+                    if (args.length >= 4) {
+                        NAME_CARDS = args[3];
+                    } else {
+                        NAME_CARDS = "CAH-Cards";
+                    }
+                } else {
+                    NAME_MASTER = "CAH-Master";
+                    NAME_CARDS = "CAH-Cards";
+                }
+            } else {
+                CHANNEL = "#CAH";
+                NAME_MASTER = "CAH-Master";
+                NAME_CARDS = "CAH-Cards";
+            }
+        } else if (args.length >= 1 && args[0].equals("--help")) {
+            System.out.println("Usage: CAH.jar [IRC server] [Channel] [Master Bot Name] [Card Bot Name]");
+            System.exit(0);
+        } else {
+            IRC_IP = "irc.esper.net";
+            CHANNEL = "#CAH";
+            NAME_MASTER = "CAH-Master";
+            NAME_CARDS = "CAH-Cards";
+        }
         System.out.println("Starting...");
         new CardsAgainstHumanity();
     }
-
     public CardBot cardBot;
     public SpamBot spamBot;
     private final Timer connect;
@@ -40,7 +74,7 @@ public class CardsAgainstHumanity {
     public Player czar;
     public BlackCard blackCard;
     public String topic = Colors.BOLD + "Cards Against Humanity" + Colors.NORMAL + " | Report issues at https://github.com/soaringcats/cards-against-humanity/issues";
-
+    
     public CardsAgainstHumanity() {
         this.gameStatus = GameStatus.BOT_START;
         try {
@@ -53,11 +87,11 @@ public class CardsAgainstHumanity {
         this.connect.schedule(new CardConnect(this), 10000);
         new Startup(this).start();
     }
-
+    
     public void checkNext() {
         if (this.proceedToNext()) {
-            this.cardBot.sendMessage("#CAH", Colors.BOLD + "All players have submitted their cards." + Colors.NORMAL + " Time for " + this.czar.getName() + " to pick the winning card.");
-            this.cardBot.sendMessage("#CAH", this.blackCard.getColored());
+            this.cardBot.sendMessage(CHANNEL, Colors.BOLD + "All players have submitted their cards." + Colors.NORMAL + " Time for " + this.czar.getName() + " to pick the winning card.");
+            this.cardBot.sendMessage(CHANNEL, this.blackCard.getColored());
             this.cardBot.sendNotice(this.czar.getName(), "Say the number of the card you wish to win.");
             Collections.shuffle(this.players);
             this.playerIter = new ArrayList<Player>(this.players);
@@ -71,15 +105,15 @@ public class CardsAgainstHumanity {
             for (int i = 0; i < this.playerIter.size(); i++) {
                 final Player player = this.playerIter.get(i);
                 if (this.blackCard.getAnswers() == 1) {
-                    this.cardBot.sendMessage("#CAH", i + 1 + ": " + player.getPlayedCards()[0].getColored());
+                    this.cardBot.sendMessage(CHANNEL, i + 1 + ": " + player.getPlayedCards()[0].getColored());
                 } else {
-                    this.cardBot.sendMessage("#CAH", i + 1 + ": " + player.getPlayedCards()[0].getColored() + " | " + player.getPlayedCards()[1].getColored());
+                    this.cardBot.sendMessage(CHANNEL, i + 1 + ": " + player.getPlayedCards()[0].getColored() + " | " + player.getPlayedCards()[1].getColored());
                 }
             }
             this.gameStatus = GameStatus.CZAR_TURN;
         }
     }
-
+    
     public Player getPlayer(final String username) {
         for (final Player player : this.players) {
             if (player.getName().equals(username)) {
@@ -88,7 +122,7 @@ public class CardsAgainstHumanity {
         }
         return null;
     }
-
+    
     public String getCards(final Player player) {
         final StringBuilder sb = new StringBuilder();
         int i = 1;
@@ -98,7 +132,7 @@ public class CardsAgainstHumanity {
         }
         return sb.toString();
     }
-
+    
     public Player getCzar() {
         Collections.shuffle(this.players);
         if (this.players.get(0) == this.czar) {
@@ -106,7 +140,7 @@ public class CardsAgainstHumanity {
         }
         return this.players.get(0);
     }
-
+    
     private void ifNotExists(final File... files) {
         for (final File file : files) {
             if (file.exists()) {
@@ -129,17 +163,17 @@ public class CardsAgainstHumanity {
             }
         }
     }
-
+    
     public boolean inSession() {
         return this.gameStatus == GameStatus.IN_SESSION || this.gameStatus == GameStatus.CZAR_TURN;
     }
-
+    
     public void nextRound() {
         this.nagger.cancel();
         this.nagger = new Timer();
         this.gameStatus = GameStatus.IN_SESSION;
         if (this.players.size() < 3) {
-            this.spamBot.sendMessage("#CAH", "Uh-oh! There aren't enough players to continue. Say 'quit' to quit, 'join' to join.");
+            this.spamBot.sendMessage(CHANNEL, "Uh-oh! There aren't enough players to continue. Say 'quit' to quit, 'join' to join.");
             this.gameStatus = GameStatus.NOT_ENOUGH_PLAYERS;
             return;
         }
@@ -148,7 +182,7 @@ public class CardsAgainstHumanity {
             if (player.isWaiting()) {
                 player.drawCardsForStart();
                 player.setWaiting(false);
-                this.spamBot.voice(this.spamBot.getChannel("#CAH"), this.spamBot.getUser(player.getName()));
+                this.spamBot.voice(this.spamBot.getChannel(CHANNEL), this.spamBot.getUser(player.getName()));
             }
             if (player.getScore() > winning) {
                 winning = player.getScore();
@@ -163,16 +197,17 @@ public class CardsAgainstHumanity {
         }
         sb.delete(sb.length() - 2, sb.length());
         final String win = (sb.toString().contains(", ") ? "Winners" : "Winner") + ": " + sb.toString();
-        if (winning > 0)
-            this.cardBot.setTopic(this.cardBot.getChannel("#CAH"), this.topic + " | " + win + " (" + winning + ")");
+        if (winning > 0) {
+            this.cardBot.setTopic(this.cardBot.getChannel(CHANNEL), this.topic + " | " + win + " (" + winning + ")");
+        }
         this.czar.setCzar(false);
         this.czar = this.getCzar();
         this.czar.setCzar(true);
-        this.spamBot.sendMessage("#CAH", "The new czar is " + Colors.BOLD + this.czar.getName());
+        this.spamBot.sendMessage(CHANNEL, "The new czar is " + Colors.BOLD + this.czar.getName());
         Collections.shuffle(this.blackCards);
         final BlackCard card = this.blackCards.get(0);
         this.blackCard = card;
-        this.spamBot.sendMessage("#CAH", "Fill in the " + (card.getAnswers() > 1 ? "blanks" : "blank") + ": " + Colors.BOLD + card.getColored() + " [Play your white " + (card.getAnswers() > 1 ? "cards by saying their numbers" : "card by saying its number") + "]");
+        this.spamBot.sendMessage(CHANNEL, "Fill in the " + (card.getAnswers() > 1 ? "blanks" : "blank") + ": " + Colors.BOLD + card.getColored() + " [Play your white " + (card.getAnswers() > 1 ? "cards by saying their numbers" : "card by saying its number") + "]");
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -181,7 +216,7 @@ public class CardsAgainstHumanity {
         this.cardBot.sendNotice(this.czar.getName(), "You don't have cards because you're the czar! Once everyone has played their cards you will be prompted to choose the best.");
         this.nagger.schedule(new Nag(this), 60000, 60000);
     }
-
+    
     public boolean proceedToNext() {
         for (final Player player : this.players) {
             if (!player.hasPlayedCards() && !player.isCzar() && !player.isWaiting()) {
@@ -190,27 +225,27 @@ public class CardsAgainstHumanity {
         }
         return true;
     }
-
+    
     public void processLeave(final Player player) {
-        this.spamBot.deVoice(this.spamBot.getChannel("#CAH"), this.spamBot.getUser(player.getName()));
+        this.spamBot.deVoice(this.spamBot.getChannel(CHANNEL), this.spamBot.getUser(player.getName()));
         this.players.remove(player);
         if (player.isCzar()) {
             Collections.shuffle(this.players);
             player.setCzar(false);
             this.czar = this.players.get(0);
             this.czar.setCzar(true);
-            this.spamBot.sendMessage("#CAH", "The current czar, " + player.getName() + " quit the game and " + this.czar.getName() + " is now the new czar for this round.");
+            this.spamBot.sendMessage(CHANNEL, "The current czar, " + player.getName() + " quit the game and " + this.czar.getName() + " is now the new czar for this round.");
             this.czar.newRound();
             if (this.gameStatus == GameStatus.CZAR_TURN) {
                 if (this.players.size() - 1 < 3) {
-                    this.spamBot.sendMessage("#CAH", "Uh-oh! There aren't enough players to continue. Say 'quit' to quit, 'join' to join.");
+                    this.spamBot.sendMessage(CHANNEL, "Uh-oh! There aren't enough players to continue. Say 'quit' to quit, 'join' to join.");
                     this.gameStatus = GameStatus.NOT_ENOUGH_PLAYERS;
                     return;
                 }
                 this.cardBot.sendNotice(this.czar.getName(), "Say the number of the card you wish to win.");
             }
         } else if (this.gameStatus == GameStatus.CZAR_TURN) {
-            this.cardBot.sendMessage("#CAH", "Uh-oh! " + player.getName() + " quit the game. Let's start a new round.");
+            this.cardBot.sendMessage(CHANNEL, "Uh-oh! " + player.getName() + " quit the game. Let's start a new round.");
             this.nextRound();
         } else {
             if (this.players.size() < 3) {
@@ -219,18 +254,18 @@ public class CardsAgainstHumanity {
         }
         this.checkNext();
     }
-
+    
     public void ready() {
-        final Channel chan = this.spamBot.getChannel("#CAH");
+        final Channel chan = this.spamBot.getChannel(CHANNEL);
         this.nagger = new Timer();
         this.spamBot.setTopic(chan, this.topic + " | Say 'join' without quotes to join the game.");
-        this.spamBot.sendMessage("#CAH", Colors.BOLD + "Welcome to Cards Against Humanity!");
-        this.spamBot.sendMessage("#CAH", "To join the game simply say 'join' in chat (without quotes) and you will be added next round!");
+        this.spamBot.sendMessage(CHANNEL, Colors.BOLD + "Welcome to Cards Against Humanity!");
+        this.spamBot.sendMessage(CHANNEL, "To join the game simply say 'join' in chat (without quotes) and you will be added next round!");
         this.gameStatus = GameStatus.NOT_ENOUGH_PLAYERS;
         this.connect.scheduleAtFixedRate(new StartGame(this.spamBot, this), 60000, 60000);
-        this.spamBot.sendMessage("#CAH", "Running version " + this.spamBot.getCAHVersion() + " with " + this.whiteCards.size() + " white cards and " + this.blackCards.size() + " black cards.");
+        this.spamBot.sendMessage(CHANNEL, "Running version " + this.spamBot.getCAHVersion() + " with " + this.whiteCards.size() + " white cards and " + this.blackCards.size() + " black cards.");
     }
-
+    
     private void setupCards() throws IOException {
         this.players = new ArrayList<Player>();
         this.whiteCards = Collections.synchronizedList(new ArrayList<WhiteCard>());
@@ -254,7 +289,7 @@ public class CardsAgainstHumanity {
         fileReader.close();
         bufferedReader.close();
     }
-
+    
     public void startGame() {
         this.gameStatus = GameStatus.IN_SESSION;
         for (final Player player : this.players) {
@@ -274,18 +309,18 @@ public class CardsAgainstHumanity {
         this.czar = this.players.get(0);
         this.nextRound();
     }
-
+    
     public void voiceUsers(String... users) {
         if (users.length < 1) {
             return;
         }
-        Channel chan = this.spamBot.getChannel("#CAH");
+        Channel chan = this.spamBot.getChannel(CHANNEL);
         String mode = "+";
         StringBuilder sb = new StringBuilder();
         for (String user : users) {
             mode += "v";
             sb.append(user + " ");
-            if (("MODE #CAH :" + mode + " " + sb.toString()).length() >= 482) {
+            if (("MODE " + CHANNEL + " :" + mode + " " + sb.toString()).length() >= 482) {
                 this.spamBot.setMode(chan, mode + " " + sb.toString());
                 mode = "+";
                 sb = new StringBuilder();
@@ -293,18 +328,18 @@ public class CardsAgainstHumanity {
         }
         this.spamBot.setMode(chan, mode + " " + sb.toString());
     }
-
+    
     public void deVoiceUsers(String... users) {
         if (users.length < 1) {
             return;
         }
-        Channel chan = this.spamBot.getChannel("#CAH");
+        Channel chan = this.spamBot.getChannel(CHANNEL);
         String mode = "-";
         StringBuilder sb = new StringBuilder();
         for (String user : users) {
             mode += "v";
             sb.append(user + " ");
-            if (("MODE #CAH :" + mode + " " + sb.toString()).length() >= 482) {
+            if (("MODE " + CHANNEL + " :" + mode + " " + sb.toString()).length() >= 482) {
                 this.spamBot.setMode(chan, mode + " " + sb.toString());
                 mode = "-";
                 sb = new StringBuilder();

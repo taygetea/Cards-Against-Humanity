@@ -5,6 +5,7 @@ import tk.nekotech.cah.CardsAgainstHumanity;
 import tk.nekotech.cah.bots.SpamBot;
 
 public class MasterConnect extends TimerTask {
+
     private final CardsAgainstHumanity cah;
 
     public MasterConnect(final CardsAgainstHumanity cah) {
@@ -14,7 +15,7 @@ public class MasterConnect extends TimerTask {
     @Override
     public void run() {
         try {
-            this.cah.spamBot = new SpamBot("CAH-Master", this.cah);
+            this.cah.spamBot = new SpamBot(cah.NAME_MASTER, this.cah);
         } catch (final Exception e) {
             System.err.println("\n\n****************");
             System.err.println("Exception during startup of Master bot!\n");

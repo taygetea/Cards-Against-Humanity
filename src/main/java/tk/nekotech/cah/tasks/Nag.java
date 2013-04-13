@@ -6,6 +6,7 @@ import tk.nekotech.cah.CardsAgainstHumanity;
 import tk.nekotech.cah.Player;
 
 public class Nag extends TimerTask {
+
     private final CardsAgainstHumanity cah;
 
     public Nag(final CardsAgainstHumanity cah) {
@@ -19,7 +20,7 @@ public class Nag extends TimerTask {
             if (!player.hasPlayedCards() && !player.isCzar() && !player.isWaiting()) {
                 player.addWarning();
                 if (player.getWarnings() == 3) {
-                    this.cah.spamBot.kick(this.cah.spamBot.getChannel("#CAH"), this.cah.spamBot.getUser(player.getName()), "You were idle after 3 warnings. Rejoin when you want. :)");
+                    this.cah.spamBot.kick(this.cah.spamBot.getChannel(cah.CHANNEL), this.cah.spamBot.getUser(player.getName()), "You were idle after 3 warnings. Rejoin when you want. :)");
                 } else if (player.getWarnings() == 2) {
                     sb.append(Colors.BOLD + player.getName() + Colors.NORMAL + ", ");
                 } else {
@@ -29,7 +30,7 @@ public class Nag extends TimerTask {
         }
         if (sb.length() != 0) {
             sb.delete(sb.length() - 2, sb.length());
-            this.cah.spamBot.sendMessage("#CAH", "Are you still there? You need to play your cards - " + sb.toString());
+            this.cah.spamBot.sendMessage(cah.CHANNEL, "Are you still there? You need to play your cards - " + sb.toString());
         }
     }
 }

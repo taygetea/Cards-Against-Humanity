@@ -7,6 +7,7 @@ import java.util.List;
 import tk.nekotech.cah.card.WhiteCard;
 
 public class Player {
+
     private String name;
     private final CardsAgainstHumanity cah;
     private final ArrayList<WhiteCard> whiteCards = new ArrayList<WhiteCard>();
@@ -113,7 +114,7 @@ public class Player {
             return false;
         }
         this.whiteCards.remove(card);
-        this.playedCards = new WhiteCard[] { card };
+        this.playedCards = new WhiteCard[]{card};
         Collections.shuffle(this.cah.whiteCards);
         final WhiteCard whiteCard = this.cah.whiteCards.get(0);
         this.whiteCards.add(whiteCard);

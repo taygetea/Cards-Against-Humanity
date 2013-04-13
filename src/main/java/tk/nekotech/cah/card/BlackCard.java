@@ -3,6 +3,7 @@ package tk.nekotech.cah.card;
 import org.pircbotx.Colors;
 
 public class BlackCard {
+
     private final String full;
     private final String color = '\u0003' + "00,01";
     private int answers;

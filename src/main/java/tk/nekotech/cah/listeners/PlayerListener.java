@@ -10,6 +10,7 @@ import tk.nekotech.cah.Player;
 import tk.nekotech.cah.card.WhiteCard;
 
 public class PlayerListener extends MasterListener {
+
     private final CardsAgainstHumanity cah;
 
     public PlayerListener(final PircBotX bot, final CardsAgainstHumanity cah) {
@@ -20,7 +21,7 @@ public class PlayerListener extends MasterListener {
     @Override
     @SuppressWarnings("rawtypes")
     public void onMessage(final MessageEvent event) {
-        if (event.getUser().getNick().contains("CAH-Master") || !this.cah.inSession() || event.getMessage().equalsIgnoreCase("join") || event.getMessage().equalsIgnoreCase("quit")) {
+        if (event.getUser().getNick().contains(cah.NAME_MASTER) || !this.cah.inSession() || event.getMessage().equalsIgnoreCase("join") || event.getMessage().equalsIgnoreCase("quit") || event.getMessage().equalsIgnoreCase("start")) {
             return;
         }
         final Player player = this.cah.getPlayer(event.getUser().getNick());
@@ -56,7 +57,7 @@ public class PlayerListener extends MasterListener {
                         } else {
                             send.append(this.cah.blackCard.getColored().replaceFirst("_", win.getPlayedCards()[0].getColored()).replaceFirst("_", win.getPlayedCards()[1].getColored()));
                         }
-                        this.cah.spamBot.sendMessage("#CAH", send.toString());
+                        this.cah.spamBot.sendMessage(cah.CHANNEL, send.toString());
                         win.addPoint();
                         this.cah.nextRound();
                     }
